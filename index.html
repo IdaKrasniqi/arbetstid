@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arbetstidsräknare</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --card: #11182a;
+            --text: #e6eefc;
+            --muted: #9fb0cf;
+            --accent: #5aa9ff;
+            --accent-2: #7dd3fc;
+            --danger: #ff6b6b;
+            --ok: #34d399;
+            --border: #22304d;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            background: radial-gradient(1000px 600px at 10% -10%, #12203a 0%, #0b1220 60%) fixed;
+            color: var(--text);
+            line-height: 1.5;
+            display: grid;
+            place-items: start center;
+            min-height: 100svh;
+            padding: 24px;
+        }
+
+
+        .app {
+            width: 100%;
+            max-width: 680px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow:
+                    0 20px 35px rgba(0,0,0,0.35),
+                    inset 0 1px 0 rgba(255,255,255,0.04);
+            padding: 22px;
+            backdrop-filter: blur(8px);
+        }
+
+        header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .logo {
+            width: 40px; height: 40px;
+            display: grid; place-items: center;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #081423;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        h1 {
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+        p.sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: .95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 18px;
+        }
+        @media (max-width: 640px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        label {
+            display: block;
+            font-size: .9rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        input, select {
+            width: 100%;
+            background: #0e1526;
+            color: var(--text);
+            border: 1px solid var(--border);
+            outline: none;
+            border-radius: 12px;
+            padding: 12px 12px;
+            font-size: 1rem;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(90,169,255,0.15);
+        }
+
+        .row { margin-top: 10px; }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--accent), #4f46e5);
+            border: none;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: .2px;
+            cursor: pointer;
+            transition: transform .05s ease, filter .2s ease;
+        }
+        button.secondary {
+            background: #101a31;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        button:hover { filter: brightness(1.05); }
+        button:active { transform: translateY(1px); }
+
+        .result {
+            margin-top: 18px;
+            padding: 14px;
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.02);
+        }
+        .result h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+        }
+        .kv {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 8px 14px;
+            font-size: 1rem;
+        }
+        .kv .key { color: var(--muted); }
+        .kv .val { font-weight: 600; }
+
+        .msg { margin-top: 10px; font-size: .95rem; }
+        .msg.ok { color: var(--ok); }
+        .msg.warn { color: var(--danger); }
+
+        footer {
+            margin-top: 22px;
+            color: var(--muted);
+            font-size: .9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<main class="app" role="main">
+    <header>
+        <div class="logo" aria-hidden="true">AT</div>
+        <div>
+            <h1>Arbetstidsräknare</h1>
+            <p class="sub">Beräkna sluttid utifrån starttid, lunch och arbetstimmar</p>
+        </div>
+    </header>
+
+    <section class="grid" aria-labelledby="inputs">
+        <div class="row">
+            <label for="start">Starttid</label>
+            <input id="start" type="time" inputmode="numeric" placeholder="08:00" />
+        </div>
+        <div class="row">
+            <label for="workLength">Arbetsdagens längd (HH:MM)</label>
+            <input id="workLength" type="time" value="08:00" />
+        </div>
+        <div class="row">
+            <label for="lunch">Lunch (minuter)</label>
+            <input id="lunch" type="number" min="0" step="5" value="30" />
+        </div>
+        <div class="row">
+            <label for="showRemaining">Visa tid kvar tills sluttid</label>
+            <select id="showRemaining">
+                <option value="yes" selected>Ja</option>
+                <option value="no">Nej</option>
+            </select>
+        </div>
+    </section>
+
+    <div class="actions">
+        <button id="btnCalc">Beräkna sluttid</button>
+        <button id="btnNow" class="secondary">Sätt starttid till nu</button>
+        <button id="btnReset" class="secondary">Rensa</button>
+    </div>
+
+    <section class="result" aria-live="polite">
+        <h2>Din arbetsdag</h2>
+        <div class="kv">
+            <div class="key">Starttid</div>
+            <div class="val" id="outStart">–</div>
+
+            <div class="key">Arbetstid</div>
+            <div class="val" id="outWork">–</div>
+
+            <div class="key">Lunch</div>
+            <div class="val" id="outLunch">–</div>
+
+            <div class="key">Sluttid</div>
+            <div class="val" id="outEnd">–</div>
+        </div>
+        <div id="message" class="msg"></div>
+    </section>
+</main>
+
+<script>
+    // ==== Hjälpfunktioner ====
+    const pad2 = n => n.toString().padStart(2, "0");
+
+    function parseHHMM(hhmm) {
+        // Returnerar {h, m} eller null
+        if (!hhmm || !/^\d{2}:\d{2}$/.test(hhmm)) return null;
+        const [h, m] = hhmm.split(":").map(Number);
+        if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+        return { h, m };
+    }
+
+    function addHM(baseH, baseM, addH, addM) {
+        // Addera timmar/minuter → normalisera
+        let totalM = baseM + addM;
+        let carryH = Math.floor(totalM / 60);
+        totalM = totalM % 60;
+
+        let totalH = baseH + addH + carryH;
+        totalH = totalH % 24; // wrap runt dygnet (enkelt)
+
+        return { h: totalH, m: totalM };
+    }
+
+    function formatHM(h, m) { return `${pad2(h)}:${pad2(m)}`; }
+
+    function diffNowTo(h, m) {
+        const now = new Date();
+        const end = new Date(now);
+        end.setHours(h, m, 0, 0);
+
+        // Om sluttiden har passerat idag, ingen tid kvar
+        if (end <= now) return { passed: true, hours: 0, minutes: 0 };
+
+        const ms = end - now;
+        const minutes = Math.floor(ms / 60000);
+        return { passed: false, hours: Math.floor(minutes / 60), minutes: minutes % 60 };
+    }
+
+    // ==== Element ====
+    const elStart = document.getElementById("start");
+    const elWork = document.getElementById("workLength");
+    const elLunch = document.getElementById("lunch");
+    const elShowRem = document.getElementById("showRemaining");
+
+    const outStart = document.getElementById("outStart");
+    const outWork = document.getElementById("outWork");
+    const outLunch = document.getElementById("outLunch");
+    const outEnd = document.getElementById("outEnd");
+    const msg = document.getElementById("message");
+
+    const btnCalc = document.getElementById("btnCalc");
+    const btnNow = document.getElementById("btnNow");
+    const btnReset = document.getElementById("btnReset");
+
+    // ==== Logik ====
+    function calculate() {
+        msg.textContent = "";
+        msg.className = "msg";
+
+        const startVal = elStart.value;
+        const workVal = elWork.value;
+        const lunchVal = parseInt(elLunch.value || "0", 10);
+
+        // Validering
+        const start = parseHHMM(startVal);
+        const work = parseHHMM(workVal);
+        if (!start) {
+            msg.textContent = "Ange en giltig starttid (HH:MM).";
+            msg.classList.add("warn");
+            outStart.textContent = "–"; outWork.textContent = "–";
+            outLunch.textContent = "–"; outEnd.textContent = "–";
+            return;
+        }
+        if (!work) {
+            msg.textContent = "Ange en giltig arbetstid (HH:MM).";
+            msg.classList.add("warn");
+            return;
+        }
+        if (Number.isNaN(lunchVal) || lunchVal < 0 || lunchVal > 600) {
+            msg.textContent = "Lunch måste vara 0–600 minuter.";
+            msg.classList.add("warn");
+            return;
+        }
+
+        // Räkna ut sluttid = start + arbetstid + lunch(min)
+        const workEnd = addHM(start.h, start.m, work.h, work.m);
+        const lunchEnd = addHM(workEnd.h, workEnd.m, 0, lunchVal);
+
+        outStart.textContent = formatHM(start.h, start.m);
+        outWork.textContent = workVal;
+        outLunch.textContent = `${lunchVal} min`;
+        outEnd.textContent = formatHM(lunchEnd.h, lunchEnd.m);
+
+        if (elShowRem.value === "yes") {
+            const rem = diffNowTo(lunchEnd.h, lunchEnd.m);
+            if (rem.passed) {
+                msg.textContent = "Arbetsdagen är redan slut.";
+                msg.classList.add("ok");
+            } else {
+                msg.textContent = `Tid kvar till sluttid: ${rem.hours} h ${pad2(rem.minutes)} m`;
+                msg.classList.add("ok");
+            }
+        }
+    }
+
+    // ==== Events ====
+    btnCalc.addEventListener("click", calculate);
+    btnNow.addEventListener("click", () => {
+        const n = new Date();
+        elStart.value = `${pad2(n.getHours())}:${pad2(n.getMinutes())}`;
+    });
+    btnReset.addEventListener("click", () => {
+        elStart.value = "";
+        elWork.value = "08:00";
+        elLunch.value = "30";
+        document.getElementById("showRemaining").value = "yes";
+        outStart.textContent = "–";
+        outWork.textContent = "–";
+        outLunch.textContent = "–";
+        outEnd.textContent = "–";
+        msg.textContent = "";
+        msg.className = "msg";
+    });
+
+    // Enter ska trigga beräkning
+    [elStart, elWork, elLunch].forEach(el => {
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") calculate();
+        });
+    });
+
+    // Förifyll starttid med nuvarande tid (valfritt)
+    (function presetNow() {
+        const n = new Date();
+        elStart.value = `${pad2(n.getHours())}:${pad2(n.getMinutes())}`;
+    })();
+</script>
+</body>
+</html>
