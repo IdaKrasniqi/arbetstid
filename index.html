@@ -357,6 +357,31 @@
         const n = new Date();
         elStart.value = `${pad2(n.getHours())}:${pad2(n.getMinutes())}`;
     })();
+
+    
+// Element
+const inputStart = document.getElementById("start");
+const inputWork = document.getElementById("workLength");
+const inputLunch = document.getElementById("lunch");
+
+// Spara vid ändring
+[inputStart, inputWork, inputLunch].forEach(el => {
+  el.addEventListener("input", () => {
+    localStorage.setItem("start", inputStart.value);
+    localStorage.setItem("work", inputWork.value);
+    localStorage.setItem("lunch", inputLunch.value);
+  });
+});
+    
+// Hämta sparade värden
+const savedStart = localStorage.getItem("start");
+const savedWork = localStorage.getItem("work");
+const savedLunch = localStorage.getItem("lunch");
+
+if (savedStart) inputStart.value = savedStart;
+if (savedWork) inputWork.value = savedWork;
+if (savedLunch) inputLunch.value = savedLunch;
 </script>
 </body>
 </html>
+
